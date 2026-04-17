@@ -1,0 +1,179 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancer Classification</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container" id="uploadContainer">
+        <h1>Загрузка данных для предсказания</h1>
+
+        <form method="post" enctype="multipart/form-data" id="predictionForm">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".csv" required>
+            <button type="submit" id="submitBtn">Загрузить и предсказать</button>
+        </form>
+
+        {% if error %}
+            <div>
+                {{ error }}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Контейнер для результатов -->
+    {% if prediction or top_genes %}
+    <div class="results-container active" id="resultsContainer">
+        <button class="back-button" onclick="resetToUpload()">
+            ← Назад к загрузке
+        </button>
+        
+        <div class="results-grid">
+            
+            <!-- Результат -->
+            {% if prediction %}
+            <div class="result-block">
+                <div class="block-title">
+                    <span class="block-title-icon"></span>
+                    <span class="block-title-text">Результат предсказания</span>
+                </div>
+                
+                {% for item in prediction %}
+                <div class="result-card {% if item.probability >= 85 %}conf-high{% else %}conf-med{% endif %}">
+                    <div class="result-header">
+                        <span class="result-label">{{ item.label }}</span>
+                        <div class="result-probability">
+                            <span class="prob-value">{{ item.probability }}%</span>
+                            <div class="prob-track">
+                                <div class="prob-fill" style="width: {{ item.probability }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if item.alternatives %}
+                    <div class="other-probs">
+                        <span class="other-label">Альтернативные варианты:</span>
+                        <div class="prob-tags">
+                            {% for prob in item.alternatives %}
+                                <span class="prob-tag">{{ prob.label }} — {{ prob.probability }}%</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Гены -->
+            {% if top_genes %}
+            <div class="result-block">
+                <div class="block-title">
+                    <span class="block-title-icon"></span>
+                    <span class="block-title-text">Топ-гены</span>
+                </div>
+                <p style="color: #6b7280; font-size: 0.9em; margin-bottom: 1.5rem;">
+                    Нажмите на ген для подробной информации 
+                    (<a href="https://www.proteinatlas.org" target="_blank" class="link-atlas">Protein Atlas</a>)
+                </p>
+                
+                <!-- Сетка имён генов -->
+                <div class="genes-list">
+                    {% for gene in top_genes %}
+                    <span class="gene-trigger" 
+                          data-name="gene-{{ forloop.counter }}"
+                          data-gene="{{ gene.gene }}"
+                          data-description="{{ gene.description|default:'Описание отсутствует'|escape }}"
+                          data-shap="{{ gene.importance }}"
+                          data-cancer="{{ gene.cancer_related|yesno:'true,false' }}"
+                          data-atlas="https://www.proteinatlas.org/search/{{ gene.gene }}">
+                        {{ gene.gene }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Загрузка -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Анализ данных... Это может занять несколько секунд</p>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="genes-preview" id="genesPreview">
+        {% for gene in top_genes %}
+        <div class="gene-card" data-target="gene-{{ forloop.counter }}">
+            <i class="gene-close fas fa-times"></i>
+            
+            <h3 class="gene-card-title">{{ gene.gene }}</h3>
+            
+            {% if gene.cancer_related %}
+            <span class="gene-badge cancer">Онкоген</span>
+            {% else %}
+            <span class="gene-badge normal">Нет данных</span>
+            {% endif %}
+            
+            <p class="gene-card-desc">{{ gene.description|default:"Описание отсутствует" }}</p>
+            
+            <div class="gene-card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">SHAP-вклад</span>
+                    <span class="meta-value">{{ gene.importance }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Важность</span>
+                    <span class="meta-value">#{{ forloop.counter }}</span>
+                </div>
+                {% if gene.ensembl_id %}
+                <div class="meta-item">
+                    <span class="meta-label">Ensembl ID</span>
+                    <span class="meta-value">{{ gene.ensembl_id }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if gene.protein_class or gene.biological_process or gene.molecular_function %}
+            <div class="gene-card-meta" style="grid-template-columns: 1fr; gap: 0.75rem;">
+                {% if gene.protein_class %}
+                <div class="meta-item" style="margin: 0;">
+                    <span class="meta-label">Класс белка</span>
+                    <span class="meta-value" style="font-size: 0.95rem; font-weight: 500;">{{ gene.protein_class }}</span>
+                </div>
+                {% endif %}
+                
+                {% if gene.biological_process %}
+                <div class="meta-item" style="margin: 0;">
+                    <span class="meta-label">Биологический процесс</span>
+                    <span class="meta-value" style="font-size: 0.95rem; font-weight: 500;">{{ gene.biological_process }}</span>
+                </div>
+                {% endif %}
+                
+                {% if gene.molecular_function %}
+                <div class="meta-item" style="margin: 0;">
+                    <span class="meta-label">Молекулярная функция</span>
+                    <span class="meta-value" style="font-size: 0.95rem; font-weight: 500;">{{ gene.molecular_function }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <a href="https://www.proteinatlas.org/search/{{ gene.gene }}" 
+            target="_blank" 
+            class="gene-card-link">
+                Посмотреть в Protein Atlas
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script src="{% static 'js/prediction.js' %}"></script>
+</body>
+</html>
