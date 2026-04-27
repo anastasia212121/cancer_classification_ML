@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История предсказаний — Cancer Classification</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- HEADER (единый для всех страниц) -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="{% url 'predict' %}" class="header-logo">🧬 CancerML</a>
+            <nav class="header-nav">
+                <a href="{% url 'predict' %}" class="nav-link">📤 Новая загрузка</a>
+                <a href="{% url 'prediction_history' %}" class="nav-link active">📜 История</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="history-container">
+        <h1 class="history-title">📜 История предсказаний</h1>
+        
+        {% if history %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Пациент</th>
+                    <th>Диагноз</th>
+                    <th>Уверенность</th>
+                    <th>Топ-3 гена</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pred in history %}
+                <tr>
+                    <td>{{ pred.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ pred.patient_id|default:"—" }}</td>
+                    <td class="history-label">{{ pred.predicted_label }}</td>
+                    <td class="history-confidence">{{ pred.confidence|floatformat:1 }}%</td>
+                    <td class="history-genes" title="{{ pred.top_genes|join:', ' }}">
+                        {% with pred.top_genes|slice:":3" as top3 %}
+                            {{ top3|join:", " }}{% if pred.top_genes|length > 3 %}…{% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="history-empty">
+            <p>История пуста.</p>
+            <a href="{% url 'predict' %}">→ Сделать первое предсказание</a>
+        </div>
+        {% endif %}
+    </main>
+
+    <script src="{% static 'js/prediction.js' %}"></script>
+</body>
+</html>

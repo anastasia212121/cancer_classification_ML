@@ -505,3 +505,193 @@ button[disabled] {
   h1 { font-size: 1.5rem; }
   button { width: 100%; }
 }
+
+/* ===== HEADER ===== */
+.main-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+  padding: 0.75rem 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-link {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-link:hover {
+  background: #f1f5f9;
+  color: var(--text);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* Сдвиг контента вниз, чтобы не перекрывался хедером */
+body {
+  padding-top: 72px;
+}
+
+/* ===== СТРАНИЦА ИСТОРИИ ===== */
+.history-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.history-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.history-table tr:hover {
+  background: #f8fafc;
+}
+
+.history-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.history-confidence {
+  font-weight: 700;
+  color: var(--success-text);
+}
+
+.history-genes {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.history-empty a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .history-table {
+    font-size: 0.85rem;
+  }
+  .history-table th,
+  .history-table td {
+    padding: 0.6rem 0.5rem;
+  }
+  .history-genes {
+    max-width: 120px;
+  }
+}
+/* Поле ввода пациента */
+.patient-id-field {
+  margin-bottom: 1.25rem;
+}
+
+.patient-id-field label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.patient-id-field input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.patient-id-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.patient-id-field small {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

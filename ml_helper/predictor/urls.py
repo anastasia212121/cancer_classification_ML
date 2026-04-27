@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import predict_view
+from . import views
+
 
 urlpatterns = [
-    path('', predict_view, name='predict'),
+    path('', views.predict_view, name='predict'),
+    path('history/', views.prediction_history_view, name='prediction_history'),  # ← новый маршрут
 ]

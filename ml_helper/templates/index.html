@@ -8,11 +8,37 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="{% url 'predict' %}" class="header-logo">🧬 CancerML</a>
+            <nav class="header-nav">
+                <a href="{% url 'predict' %}" class="nav-link {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
+                    Новая загрузка
+                </a>
+                <a href="{% url 'prediction_history' %}" class="nav-link {% if request.resolver_match.url_name == 'prediction_history' %}active{% endif %}">
+                    История
+                </a>
+            </nav>
+        </div>
+    </header>   
     <div class="container" id="uploadContainer">
         <h1>Загрузка данных для предсказания</h1>
 
         <form method="post" enctype="multipart/form-data" id="predictionForm">
             {% csrf_token %}
+            
+            <div class="patient-id-field">
+                <label for="patient_id">
+                    ID пациента (опционально)
+                </label>
+                <input 
+                    type="text" 
+                    id="patient_id" 
+                    name="patient_id" 
+                >
+
+            </div>
+            
             <input type="file" name="file" accept=".csv" required>
             <button type="submit" id="submitBtn">Загрузить и предсказать</button>
         </form>
@@ -27,9 +53,6 @@
     <!-- Контейнер для результатов -->
     {% if prediction or top_genes %}
     <div class="results-container active" id="resultsContainer">
-        <button class="back-button" onclick="resetToUpload()">
-            ← Назад к загрузке
-        </button>
         
         <div class="results-grid">
             

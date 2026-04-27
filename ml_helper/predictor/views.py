@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .ml_model import predict_from_dataframe
+from .models import PredictionHistory  # ← импортируем модель
 from genes.services.gene_annotator import GeneAnnotator
 import pandas as pd
 import logging
@@ -36,6 +37,17 @@ def predict_view(request):
                 annotator = GeneAnnotator(delay_between_requests=0.2)
                 top_genes = annotator.annotate_genes(top_importance, top_n=10)
 
+            # 🔽 СОХРАНЯЕМ В БД (только первый результат, если файл содержит один образец)
+            if prediction and len(prediction) > 0:
+                res = prediction[0]
+                PredictionHistory.objects.create(
+                    patient_id=request.POST.get("patient_id", ""),
+                    predicted_label=res["label"],
+                    confidence=res["probability"],
+                    top_genes=res.get("top_genes", {}),
+                    alternatives=res.get("alternatives", []),
+                    input_file_name=file.name
+                )
 
         except Exception as e:
             error = f"Ошибка обработки: {str(e)}"
@@ -49,3 +61,7 @@ def predict_view(request):
         "error": error,
         "top_genes": top_genes,
     })
+
+def prediction_history_view(request):
+    history = PredictionHistory.objects.all()[:100]  # последние 100 записей
+    return render(request, "history.html", {"history": history}) 
