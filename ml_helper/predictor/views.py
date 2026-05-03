@@ -1,11 +1,38 @@
-from django.shortcuts import render
-from .ml_model import predict_from_dataframe
-from .models import PredictionHistory  # ← импортируем модель
-from genes.services.gene_annotator import GeneAnnotator
-import pandas as pd
 import logging
+import pandas as pd
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+from .ml_model import predict_from_dataframe
+from .models import PredictionHistory
+from genes.services.gene_annotator import GeneAnnotator
 
 logger = logging.getLogger(__name__)
+
+
+@require_GET
+def prediction_detail_api(request, pk):
+    """API: возвращает полные данные предсказания по ID"""
+    try:
+        pred = PredictionHistory.objects.get(pk=int(pk))
+        return JsonResponse({
+            "id": pred.id,
+            "patient_id": pred.patient_id or "—",
+            "created_at": pred.created_at.isoformat(),
+            "input_file_name": pred.input_file_name or "—",
+            "predicted_label": pred.predicted_label,
+            "confidence": pred.confidence,
+            "alternatives": pred.alternatives if isinstance(pred.alternatives, list) else [],
+            "top_genes": pred.top_genes if isinstance(pred.top_genes, dict) else {},
+        })
+    except PredictionHistory.DoesNotExist:
+        return JsonResponse({"error": "Запись не найдена"}, status=404)
+    except ValueError:
+        return JsonResponse({"error": "Некорректный ID"}, status=400)
+
 
 def predict_view(request):
     prediction = None
@@ -37,11 +64,11 @@ def predict_view(request):
                 annotator = GeneAnnotator(delay_between_requests=0.2)
                 top_genes = annotator.annotate_genes(top_importance, top_n=10)
 
-            # 🔽 СОХРАНЯЕМ В БД (только первый результат, если файл содержит один образец)
+            # Сохраняем в БД
             if prediction and len(prediction) > 0:
                 res = prediction[0]
                 PredictionHistory.objects.create(
-                    patient_id=request.POST.get("patient_id", ""),
+                    patient_id=request.POST.get("patient_id", "").strip() or None,
                     predicted_label=res["label"],
                     confidence=res["probability"],
                     top_genes=res.get("top_genes", {}),
@@ -52,7 +79,6 @@ def predict_view(request):
         except Exception as e:
             error = f"Ошибка обработки: {str(e)}"
             logger.error(error, exc_info=True)
-            print(f"\n[ERROR] {e}")
             prediction = None
             top_genes = []
 
@@ -62,6 +88,25 @@ def predict_view(request):
         "top_genes": top_genes,
     })
 
+
 def prediction_history_view(request):
-    history = PredictionHistory.objects.all()[:100]  # последние 100 записей
-    return render(request, "history.html", {"history": history}) 
+    query = request.GET.get('q', '').strip()
+    qs = PredictionHistory.objects.all().order_by('-created_at')
+    
+    if query:
+        qs = qs.filter(patient_id__icontains=query)
+        
+    paginator = Paginator(qs, 10)
+    page_number = request.GET.get('page')
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+        
+    return render(request, 'history.html', {
+        'page_obj': page_obj,
+        'query': query
+    })

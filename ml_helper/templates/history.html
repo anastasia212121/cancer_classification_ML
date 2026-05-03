@@ -5,24 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>История предсказаний — Cancer Classification</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/history.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
 </head>
 <body>
-    <!-- HEADER (единый для всех страниц) -->
     <header class="main-header">
-        <div class="header-container">
-            <a href="{% url 'predict' %}" class="header-logo">🧬 CancerML</a>
-            <nav class="header-nav">
-                <a href="{% url 'predict' %}" class="nav-link">📤 Новая загрузка</a>
-                <a href="{% url 'prediction_history' %}" class="nav-link active">📜 История</a>
-            </nav>
-        </div>
+        {% include 'includes/header.html' %}
     </header>
 
     <main class="history-container">
-        <h1 class="history-title">📜 История предсказаний</h1>
+        <h1 class="history-title">История предсказаний</h1>
         
-        {% if history %}
+        <!-- 🔍 Поиск -->
+        <form method="get" class="search-form">
+            <input type="text" name="q" value="{{ query }}" placeholder="Поиск по ID пациента...">
+            <button type="submit">Найти</button>
+            {% if query %}
+                <a href="{% url 'prediction_history' %}" class="clear-search" title="Сбросить">✕</a>
+            {% endif %}
+        </form>
+        
+        {% if page_obj %}
         <table class="history-table">
             <thead>
                 <tr>
@@ -30,12 +34,13 @@
                     <th>Пациент</th>
                     <th>Диагноз</th>
                     <th>Уверенность</th>
-                    <th>Топ-3 гена</th>
+                    <th>Топ гены</th>
+                    <th>Просмотр</th>
                 </tr>
             </thead>
             <tbody>
-                {% for pred in history %}
-                <tr>
+                {% for pred in page_obj %}
+                <tr onclick="openPredictionModal({{ pred.id }})" style="cursor: pointer;">
                     <td>{{ pred.created_at|date:"d.m.Y H:i" }}</td>
                     <td>{{ pred.patient_id|default:"—" }}</td>
                     <td class="history-label">{{ pred.predicted_label }}</td>
@@ -45,18 +50,89 @@
                             {{ top3|join:", " }}{% if pred.top_genes|length > 3 %}…{% endif %}
                         {% endwith %}
                     </td>
+                    <td>
+                        <button class="nav-link" style="background:var(--primary);color:white;padding:0.4rem 0.8rem;border-radius:6px;border:none;cursor:pointer;" 
+                                onclick="event.stopPropagation(); openPredictionModal({{ pred.id }})">
+                            ...
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+        <!-- 📄 Пагинация -->
+        {% if page_obj.has_other_pages %}
+        <nav class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pagination-btn">← Назад</a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="pagination-btn active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}" class="pagination-btn">{{ num }}</a>
+                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <span class="pagination-ellipsis">...</span>
+                    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}" class="pagination-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pagination-btn">Далее →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+        
         {% else %}
         <div class="history-empty">
-            <p>История пуста.</p>
-            <a href="{% url 'predict' %}">→ Сделать первое предсказание</a>
+            {% if query %}
+                <p>По запросу "<b>{{ query }}</b>" ничего не найдено.</p>
+                <a href="{% url 'prediction_history' %}">→ Показать все записи</a>
+            {% else %}
+                <p>История пуста.</p>
+                <a href="{% url 'predict' %}">→ Сделать первое предсказание</a>
+            {% endif %}
         </div>
         {% endif %}
     </main>
 
-    <script src="{% static 'js/prediction.js' %}"></script>
+    <!-- Модальное окно (без изменений) -->
+    <div class="genes-preview" id="predictionModal">
+        <div class="gene-card">
+            <i class="gene-close fas fa-times" onclick="closePredictionModal()"></i>
+            <h3 class="gene-card-title" id="modalTitle">Детали предсказания</h3>
+            
+            <div class="gene-card-meta">
+                <div class="meta-item"><span class="meta-label">Пациент</span><span class="meta-value" id="modalPatient">—</span></div>
+                <div class="meta-item"><span class="meta-label">Дата</span><span class="meta-value" id="modalDate">—</span></div>
+                <div class="meta-item"><span class="meta-label">Файл</span><span class="meta-value" id="modalFile">—</span></div>
+                <div class="meta-item"><span class="meta-label">ID записи</span><span class="meta-value" id="modalId">—</span></div>
+            </div>
+
+            <div class="result-summary">
+                <div class="result-header"><strong id="modalLabel">—</strong><span id="modalConfidence">—</span></div>
+                <div class="prob-track"><div class="prob-fill" id="modalProbFill"></div></div>
+            </div>
+
+            <div id="modalAlternativesBlock">
+                <strong class="section-label">Альтернативные варианты:</strong>
+                <div class="prob-tags" id="modalAlternatives"></div>
+            </div>
+
+            <div class="genes-section">
+                <strong class="section-label">Топ-гены, повлиявшие на прогноз:</strong>
+                <div class="genes-list" id="modalGenes"></div>
+            </div>
+
+            <div class="chart-section">
+                <strong class="section-label">Визуализация вклада генов:</strong>
+                <div class="chart-wrapper"><canvas id="genesChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/history.js' %}"></script>
 </body>
 </html>

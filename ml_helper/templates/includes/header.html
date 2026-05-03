@@ -1,0 +1,13 @@
+<header class="main-header">
+    <div class="header-container">
+        <a href="{% url 'predict' %}" class="header-logo">🧬 CancerML</a>
+        <nav class="header-nav">
+            <a href="{% url 'predict' %}" class="nav-link {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
+                Новая загрузка
+            </a>
+            <a href="{% url 'prediction_history' %}" class="nav-link {% if request.resolver_match.url_name == 'prediction_history' %}active{% endif %}">
+                История
+            </a>
+        </nav>
+    </div>
+</header>

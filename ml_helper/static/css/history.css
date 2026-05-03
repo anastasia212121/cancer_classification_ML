@@ -1,0 +1,280 @@
+/* ===== КОНТЕЙНЕР ИСТОРИИ ===== */
+.history-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.history-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Таблица */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.history-table tr:hover { background: #f8fafc; }
+
+.history-label { font-weight: 600; color: var(--text); }
+.history-confidence { font-weight: 700; color: var(--success-text); }
+
+.history-genes {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.history-empty a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО: ДЕТАЛИ ПРЕДСКАЗАНИЯ ===== */
+
+/* Фон-затемнение (overlay) */
+#predictionModal,
+.genes-preview {
+  position: fixed;
+  top: 0; left: 0;
+  min-height: 100vh;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 1rem;
+}
+
+/* Сама карточка внутри */
+#predictionModal .gene-card {
+  display: none;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 720px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  text-align: left;
+}
+
+#predictionModal .gene-card.active {
+  display: block;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Кнопка закрытия */
+#predictionModal .gene-close {
+  position: absolute;
+  top: 1rem; right: 1.25rem;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+  font-style: normal;
+}
+#predictionModal .gene-close:hover {
+  color: #0f172a;
+  transform: rotate(90deg);
+}
+
+/* Заголовок */
+#predictionModal .gene-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem 0;
+  padding-right: 2rem;
+}
+
+/* Мета-блоки (Пациент, Дата, и т.д.) */
+#predictionModal .gene-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+#predictionModal .meta-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+#predictionModal .meta-value {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+/* Блок альтернатив */
+#predictionModal .prob-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Список генов в модалке */
+#modalGenes .gene-trigger {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: default;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+#modalGenes .gene-trigger:hover {
+  background: #f1f5f9;
+}
+
+.gene-shap-value {
+  font-weight: 700;
+  color: var(--primary);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  #predictionModal .gene-card { padding: 1.5rem; }
+  #predictionModal .gene-card-meta { grid-template-columns: 1fr !important; }
+}
+
+/* ===== ПОИСК ===== */
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.search-form input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.search-form button {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.search-form button:hover { background: var(--primary-hover); }
+
+.clear-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  background: #f1f5f9;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+.clear-search:hover { background: #fee2e2; color: #ef4444; }
+
+/* ===== ПАГИНАЦИЯ ===== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  padding: 0.5rem 0.9rem;
+  background: #f8fafc;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+.pagination-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+.pagination-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.pagination-ellipsis {
+  padding: 0.5rem;
+  color: var(--text-muted);
+}
+
+/* Адаптив */
+@media (max-width: 640px) {
+  .search-form { flex-direction: column; }
+  .pagination-btn { padding: 0.4rem 0.6rem; font-size: 0.85rem; }
+}
