@@ -134,7 +134,7 @@
   padding-right: 2rem;
 }
 
-/* Мета-блоки (Пациент, Дата, и т.д.) */
+/* Мета-блоки */
 #predictionModal .gene-card-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -239,7 +239,6 @@
 }
 .clear-search:hover { background: #fee2e2; color: #ef4444; }
 
-/* ===== ПАГИНАЦИЯ ===== */
 .pagination {
   display: flex;
   justify-content: center;
@@ -272,8 +271,49 @@
   padding: 0.5rem;
   color: var(--text-muted);
 }
+.pdf-btn {
+    background: #16a34a;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
 
-/* Адаптив */
+.pdf-btn:hover {
+    background: #15803d;
+}
+.action-btn {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s ease;
+    white-space: nowrap;
+}
+
+.view-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.view-btn:hover {
+    background: var(--primary-hover, #1d4ed8);
+}
+
+.actions-cell {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .search-form { flex-direction: column; }
   .pagination-btn { padding: 0.4rem 0.6rem; font-size: 0.85rem; }

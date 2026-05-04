@@ -80,6 +80,22 @@
                     {% endif %}
                 </div>
                 {% endfor %}
+                {% if explanation %}
+                <div class="model-explanation-block">
+                    <div class="explanation-title">
+                        Интерпретация модели
+                    </div>
+
+                    <p class="model-explanation">
+                        {{ explanation|linebreaks }}
+                    </p>
+                </div>
+                {% endif %}
+                {% if report_id %}
+                    <a href="{% url 'download_report' report_id %}" class="download-btn">
+                        Скачать отчёт (PDF)
+                    </a>
+                {% endif %}
             </div>
             {% endif %}
 

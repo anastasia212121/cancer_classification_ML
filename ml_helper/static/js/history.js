@@ -1,7 +1,5 @@
-// ===== ГЛОБАЛЬНАЯ ПЕРЕМЕННАЯ ДЛЯ ДИАГРАММЫ =====
 let genesChartInstance = null;
 
-// ===== ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ =====
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('predictionModal');
     if (modal) {
@@ -16,17 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ===== ФУНКЦИЯ ОТРИСОВКИ ДИАГРАММЫ =====
 function renderGenesPieChart(genesDict) {
     const ctx = document.getElementById('genesChart');
     if (!ctx) return;
     
-    // Уничтожаем старую диаграмму
     if (genesChartInstance) {
         genesChartInstance.destroy();
     }
     
-    // Подготовка данных: топ-10 генов по важности
     const entries = Object.entries(genesDict)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
@@ -34,7 +29,6 @@ function renderGenesPieChart(genesDict) {
     const labels = entries.map(([gene]) => gene);
     const values = entries.map(([, value]) => value);
     
-    // Цвета: градиент от синего к фиолетовому
     const colors = labels.map((_, i) => {
         const hue = 220 + (i * 12) % 100;
         return `hsl(${hue}, 70%, 60%)`;
@@ -81,7 +75,6 @@ function renderGenesPieChart(genesDict) {
     });
 }
 
-// ===== ОТКРЫТИЕ МОДАЛЬНОГО ОКНА =====
 function openPredictionModal(predictionId) {
     fetch(`/api/prediction/${predictionId}/`)
         .then(res => {
@@ -100,6 +93,7 @@ function openPredictionModal(predictionId) {
             document.getElementById('modalLabel').textContent = data.predicted_label;
             document.getElementById('modalConfidence').textContent = `${data.confidence.toFixed(1)}%`;
             document.getElementById('modalProbFill').style.width = `${data.confidence}%`;
+            document.getElementById('modalExplanation').textContent = data.explanation || '—';
 
             // Альтернативы
             const altBlock = document.getElementById('modalAlternativesBlock');
@@ -113,7 +107,7 @@ function openPredictionModal(predictionId) {
                 altBlock.style.display = 'none';
             }
 
-            // Гены: список
+            // Гены список
             const genesContainer = document.getElementById('modalGenes');
             if (data.top_genes && Object.keys(data.top_genes).length > 0) {
                 genesContainer.innerHTML = Object.entries(data.top_genes)
@@ -125,11 +119,9 @@ function openPredictionModal(predictionId) {
                         </span>
                     `).join('');
                 
-                // 🔽 ОТРИСОВЫВАЕМ ДИАГРАММУ 🔽
                 renderGenesPieChart(data.top_genes);
             } else {
                 genesContainer.innerHTML = '<span class="empty-message">Данные о генах недоступны</span>';
-                // Очищаем диаграмму, если нет данных
                 if (genesChartInstance) {
                     genesChartInstance.destroy();
                     genesChartInstance = null;
@@ -147,7 +139,6 @@ function openPredictionModal(predictionId) {
         });
 }
 
-// ===== ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА =====
 function closePredictionModal() {
     const modal = document.getElementById('predictionModal');
     if (modal) modal.style.display = 'none';
@@ -155,7 +146,6 @@ function closePredictionModal() {
     const card = document.querySelector('#predictionModal .gene-card');
     if (card) card.style.display = 'none';
     
-    // Очищаем диаграмму при закрытии
     if (genesChartInstance) {
         genesChartInstance.destroy();
         genesChartInstance = null;
